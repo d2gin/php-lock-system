@@ -16,6 +16,7 @@
 4. 文件锁的key是对应的文件名
 5. 文件锁运行过程中默认会产生一个名为`icy8/php_lock_system/`的文件夹
 6. 如果闭包内有结果返回，那么在run方法可以获取到这个结果。
+7. 安装：`composer require icy8/php-lock-system`
 
 #### 已知问题
 
