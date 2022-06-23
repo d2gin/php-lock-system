@@ -4,7 +4,7 @@
 基于php的锁机制
 
 #### 软件架构
-1. php>=7.4
+1. php>=7.0
 2. 基于redis/file锁
 3. 默认使用的是redis锁
 
@@ -282,5 +282,4 @@ $lxs->redis()->run($lxs, "aaa");
         sleep(2);
     });
     ```
-    
     
