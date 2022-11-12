@@ -181,6 +181,23 @@ $lxs->bindEvent("Business");
 $lxs->redis()->run($lxs, "aaa");
 ```
 
+5. 锁超时后抛出异常
+
+    ```php
+    <?php
+    include "vendor/autoload.php";
+
+    use \icy8\PHPLock\Client;
+
+    $lxs = new Client("test_lock_userid");
+    $lxs->lockTimeoutException = true;// 超时后抛出异常
+    $lxs->redis()->run(function () use ($lxs) {
+        var_dump("running pid: " . $lxs->getPid());
+        sleep(10);
+    });
+
+    ```
+
 #### 错误用法
 
 1. 数据库事务
@@ -287,21 +304,4 @@ $lxs->redis()->run($lxs, "aaa");
         }
         sleep(2);
     });
-    ```
-    
-3. 锁超时后抛出异常
-
-    ```php
-    <?php
-    include "vendor/autoload.php";
-
-    use \icy8\PHPLock\Client;
-
-    $lxs = new Client("test_lock_userid");
-    $lxs->lockTimeoutException = true;// 超时后抛出异常
-    $lxs->redis()->run(function () use ($lxs) {
-        var_dump("running pid: " . $lxs->getPid());
-        sleep(10);
-    });
-
     ```
