@@ -2,6 +2,7 @@
 
 namespace icy8\PHPLock;
 
+use icy8\PHPLock\Exceptions\LockOvertimeException;
 use icy8\PHPLock\System\File;
 use icy8\PHPLock\System\Driver;
 use icy8\PHPLock\System\Redis;
@@ -10,12 +11,31 @@ class Client
 {
     const fire_until_unlock = 1;
     const fire_until_lock   = 2;
-    protected string          $pid;
-    protected                 $event;                 // 业务体事件
-    protected Driver          $lockSystem;            // 编程锁实例
-    protected array           $lock;                  // 锁信息
-    protected int             $lockTimeout = 3;       // 秒 循环体超时时间 防死锁
-    protected int             $opportunity = self::fire_until_lock;
+    /**
+     * @var string $pid
+     */
+    protected $pid;
+    protected $event;                 // 业务体事件
+    /**
+     * @var Driver $lockSystem
+     */
+    protected $lockSystem;            // 编程锁实例
+    /**
+     * @var array $lock
+     */
+    protected $lock;                  // 锁信息
+    /**
+     * @var int $lockTimeout
+     */
+    protected $lockTimeout = 3;       // 秒 循环体超时时间 防死锁
+    /**
+     * @var int $opportunity
+     */
+    protected $opportunity = self::fire_until_lock;
+    /**
+     * @var bool $lockTimeoutException
+     */
+    public $lockTimeoutException = false;// 锁超时时抛出异常
 
     public function __construct($key = '')
     {
@@ -79,10 +99,7 @@ class Client
      */
     public function file($config = [])
     {
-        $this->bindLockSystem('file', array_merge([
-            'key'    => $this->lock[0],
-            'expire' => $this->lock[1],
-        ], $config));
+        $this->bindLockSystem('file', array_merge(['key' => $this->lock[0], 'expire' => $this->lock[1],], $config));
         return $this;
     }
 
@@ -115,7 +132,8 @@ class Client
      * 释放锁
      * @return int
      */
-    public function unlock() {
+    public function unlock()
+    {
         return $this->lockSystem->unlock();
     }
 
@@ -196,9 +214,15 @@ class Client
     {
         $st = microtime(true);
         while (1) {
-            if (($st - microtime(true)) > $this->lockTimeout) {
-                // 解除死锁
-                $this->lockSystem->unlock();
+            if ((microtime(true) - $st) > $this->lockTimeout) {
+                var_dump('The lock timed out.');
+                if ($this->lockTimeoutException) {
+                    // 如果锁超时就退出
+                    throw new LockOvertimeException('The lock timed out.');
+                } else {
+                    // 解除死锁
+                    $this->lockSystem->unlock();
+                }
             }
             if ($closure() === true) {
                 return true;

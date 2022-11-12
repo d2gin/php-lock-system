@@ -42,7 +42,7 @@ class Redis extends Driver
      */
     public function lock()
     {
-        return $this->resolve->set($this->key, 'running', ['nx', 'ex' => $this->expire]);
+        return $this->resolve->set($this->key, 'running', ['nx', 'ex' => $this->expire + 1]);// @todo 待优化
     }
 
     /**
