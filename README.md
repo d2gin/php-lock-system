@@ -26,6 +26,12 @@
 
 - 如果你的业务代码运行超过了3秒甚至更长时间，那么说明你需要优化业务代码提高程序性能，显然，这是另一个层面的问题。
 
+#### 原理解析
+
+1. 当锁存在时另外的进程就需要等待这个锁释放后才能执行相关的事件闭包。即使用`while(true)`等待锁。
+2. 默认策略是等待释放锁超时后马上执行事件闭包，即忽略锁，这样操作的后果就是数据依然会有并发问题。
+3. 最新一个版本的加入了一个释放锁超时后抛出异常，退出当前程序。这样操作的后果就是这一次请求的数据会丢失
+
 #### 样例
 
 ~~目前只支持闭包运行，请勿传非\Closure类型的参数~~
@@ -283,3 +289,19 @@ $lxs->redis()->run($lxs, "aaa");
     });
     ```
     
+3. 锁超时后抛出异常
+
+    ```php
+    <?php
+    include "vendor/autoload.php";
+
+    use \icy8\PHPLock\Client;
+
+    $lxs = new Client("test_lock_userid");
+    $lxs->lockTimeoutException = true;// 超时后抛出异常
+    $lxs->redis()->run(function () use ($lxs) {
+        var_dump("running pid: " . $lxs->getPid());
+        sleep(10);
+    });
+
+    ```
